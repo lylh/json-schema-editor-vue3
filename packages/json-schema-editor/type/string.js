@@ -1,5 +1,13 @@
+/*
+ * @Author       : luh1 luh1@xiaopeng.com
+ * @Date         : 2024-01-31 10:22:23
+ * @LastEditors  : luh1 luh1@xiaopeng.com
+ * @LastEditTime : 2024-02-04 20:06:53
+ * @FilePath     : /json-schema-editor-vue3/packages/json-schema-editor/type/string.js
+ * @Description  : 
+ */
 const value = {
-    description: null,
+    default: null,
     maxLength: null,
     minLength: null,
     pattern: null,
@@ -7,8 +15,8 @@ const value = {
     enum:undefined
 }
 const attr = {
-    description: {
-      name: '描述',
+    default: {
+      name: '默认值',
       type: 'string',
     },
     maxLength:{

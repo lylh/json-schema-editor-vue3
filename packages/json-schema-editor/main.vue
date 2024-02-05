@@ -22,7 +22,10 @@
           </a-tooltip>
         </a-col>
         <a-col :span="4">
-          <a-select v-model:value="pickValue.type" :disabled="disabledType" class="ant-col-type" @change="onChangeType" :getPopupContainer="
+          <a-input v-model:value="pickValue.title" class="ant-col-title"   :placeholder="local['title']"/>
+        </a-col>
+        <a-col :span="4">
+          <a-select v-model:value="pickValue.type" :disabled="disabledType" class="ant-col-type"  @change="onChangeType" :getPopupContainer="
           triggerNode => {
             return triggerNode.parentNode || document.body;
           }"
@@ -32,8 +35,17 @@
             </a-select-option>
           </a-select>
         </a-col>
-        <a-col :span="6">
-          <a-input v-model:value="pickValue.title" class="ant-col-title" :placeholder="local['title']"/>
+        <a-col :span="4">
+          <a-select v-model:value="pickValue.defalt" class="ant-col-type" :getPopupContainer="
+          triggerNode => {
+            return triggerNode.parentNode || document.body;
+          }"
+        >
+          <a-select-option value="">{{ local['nothing'] }}</a-select-option>
+            <a-select-option :key="t" v-for="t in advancedValue['enum']">
+              {{t}}
+            </a-select-option>
+          </a-select>
         </a-col>
         <a-col :span="6" class="ant-col-setting">
           <a-tooltip>
@@ -46,7 +58,6 @@
             <template v-slot:title>{{ local['add_child_node'] }}</template>
             <a-button type="link" class="plus-icon" @click="addChild">
               <template #icon><plus-outlined /></template>
-              
             </a-button>
           </a-tooltip>
           <a-tooltip v-if="!root && !isItem">
@@ -253,7 +264,30 @@ export default {
       local: LocalProvider(this.lang)
     }
   },
+  watch: {
+    // 监听 'value' prop 的变化
+    value: {
+      handler(newValue) {
+        this.updateAdvancedValue(newValue);
+      },
+      deep: true // 如果 'value' 是一个对象，则需要启用深度监听
+    },
+  },
   methods: {
+    updateAdvancedValue(newValue) {
+      const pickValue = Object.values(newValue)[0];
+      const advanced = TYPE[pickValue.type]; // 假设 'TYPE' 已经是可用的
+      const advancedValue = {};
+
+      for (let key in advanced.attr) {
+        // 使用 Object.prototype.hasOwnProperty.call 来检查属性是否存在
+        if (Object.prototype.hasOwnProperty.call(pickValue, key)) {
+          advancedValue[key] = pickValue[key];
+        }
+      }
+
+      this.advancedValue = advancedValue; // 同步更新 `advancedValue`
+    },
     onInputName(e){
       const oldKey = this.pickKey
       const newKey = e.target.value
@@ -296,6 +330,28 @@ export default {
       if(this.isArray){
         this.pickValue['items'] = { type:'string' }
       }
+    },
+
+    onEnumChange(enumValue) {
+    // 直接更新默认值为选中的 enum 值
+    // `this.pickValue.default` 就是你想要的默认值的属性名
+    this.pickValue.default = enumValue;
+    },
+
+    
+    onChangeEnum() {
+      this.parseCustomProps()
+      // 删除自定义属性
+      this.customProps.forEach(item => {
+        delete this.pickValue[item.key]
+      });
+      this.customProps = [];
+
+      delete this.pickValue['properties']
+      delete this.pickValue['items']
+      delete this.pickValue['required']
+      delete this.pickValue['format']
+     
     },
     onCheck(e){
       this._checked(e.target.checked,this.parent)
@@ -435,6 +491,8 @@ export default {
 .json-schema-editor .row {
   display: flex;
   margin: 12px;
+  align-items: center; /* 确保所有子项垂直居中 */
+  flex-wrap: nowrap; /* 防止它们换行 */
 }
 .json-schema-editor .row .ant-col-name {
   display: flex;
@@ -453,7 +511,8 @@ export default {
   width: 100%;
 }
 .json-schema-editor .row .ant-col-setting {
-  display: inline-block;
+  display: flex;
+  visibility: visible;
 }
 .json-schema-editor .row .setting-icon {
   color: rgba(0, 0, 0, 0.45);
